@@ -123,7 +123,6 @@ class Exp:
         config = args.__dict__
         recorder = Recorder(verbose=True)
         
-        # Open the log file in write mode (or append mode if you want to keep adding to the file)
         log_file = "training_log.txt"
         with open(log_file, 'w') as log:
             # Start time tracking
@@ -138,7 +137,6 @@ class Exp:
 
                 train_pbar = tqdm(self.train_loader)
                 for batch in train_pbar:
-                    # Modified: Only unpack the two values we actually get from the dataloader
                     batch_x, batch_y = batch
                     print(f"Batch x shape: {batch_x.shape}, Batch y shape: {batch_y.shape}")
                     
@@ -192,20 +190,16 @@ class Exp:
         pred_frames = preds[batch_idx].cpu().numpy()
 
         def enhance_rgb_frame(frame):
-            # Scale to 0-255 range
             frame = np.clip(frame, 0, 1)
             frame = (frame * 255).astype(np.uint8)
             
             # Convert to proper image format based on channels
             if frame.shape[0] == 3:  # Already RGB format (CHW)
-                # Just transpose to HWC for visualization
                 frame = frame.transpose(1, 2, 0)
             elif frame.shape[0] == 1:  # Grayscale
-                # Convert to 3-channel but keep as grayscale for consistency
                 frame = np.repeat(frame, 3, axis=0)
                 frame = frame.transpose(1, 2, 0)
             
-            # Don't convert RGB to BGR - this preserves original colors
             return frame
 
         
@@ -217,11 +211,9 @@ class Exp:
                                 fourcc, fps, (width, height))
             
             for frame in frames:
-                # Enhance and prepare RGB frame
                 frame_img = enhance_rgb_frame(frame)
-                # OpenCV VideoWriter expects BGR format
-                frame_img_bgr = cv2.cvtColor(frame_img, cv2.COLOR_RGB2BGR)
-                out.write(frame_img_bgr)
+    
+                out.write(frame_img)
             
             out.release()
 
@@ -262,11 +254,9 @@ class Exp:
             pred_img = enhance_rgb_frame(pred_frames[i])
             true_img = enhance_rgb_frame(true_frames[i])
 
-            # Concatenate horizontally
             comparison_frame = np.hstack([input_img, pred_img, true_img])
-            # OpenCV expects BGR for VideoWriter, so convert for video only
-            comparison_frame_bgr = cv2.cvtColor(comparison_frame, cv2.COLOR_RGB2BGR)
-            comparison_video.write(comparison_frame_bgr)
+            # comparison_frame_bgr = cv2.cvtColor(comparison_frame, cv2.COLOR_RGB2BGR)
+            comparison_video.write(comparison_frame)
             
             # Calculate and log metrics for this frame
             mse = np.mean((pred_frames[i, 0] - true_frames[i, 0]) ** 2)
@@ -283,24 +273,6 @@ class Exp:
         create_video(pred_frames, f'predicted_sequence_{batch_idx}.mp4')
         create_video(true_frames, f'ground_truth_sequence_{batch_idx}.mp4')
         
-        # Create a summary plot of all predictions
-        n_cols = min(5, len(pred_frames))
-        n_rows = (len(pred_frames) + n_cols - 1) // n_cols
-        fig, axes = plt.subplots(n_rows, n_cols, figsize=(4*n_cols, 4*n_rows))
-        axes = axes.flatten()
-        
-        for t in range(len(pred_frames)):
-            axes[t].imshow(pred_frames[t, 0], cmap='gray')
-            axes[t].set_title(f'Frame {t}')
-            axes[t].axis('off')
-        
-        # Hide empty subplots
-        for t in range(len(pred_frames), len(axes)):
-            axes[t].axis('off')
-        
-        plt.tight_layout()
-        plt.savefig(osp.join(video_path, f'all_predictions_{batch_idx}.png'), dpi=300, bbox_inches='tight')
-        plt.close()
 
     def test(self, args):
         print("\nStarting test...")
@@ -351,45 +323,6 @@ class Exp:
 
         return avg_metrics['mse']
     
-
-    # def test(self, args):
-    #     print("\nStarting test...")
-    #     self.model.eval()
-    #     inputs_lst, trues_lst, preds_lst = [], [], []
-    
-    #     with torch.no_grad():
-    #         for batch_x, batch_y in self.test_loader:
-    #             pred_y = self.model(batch_x.to(self.device))
-    #             list(map(lambda data, lst: lst.append(data.detach().cpu().numpy()), [
-    #                 batch_x, batch_y, pred_y], [inputs_lst, trues_lst, preds_lst]))
-
-    #         inputs, trues, preds = map(lambda data: np.concatenate(
-    #             data, axis=0), [inputs_lst, trues_lst, preds_lst])
-
-    #         folder_path = self.path + '/results/{}/sv/'.format(args.ex_name)
-    #         if not os.path.exists(folder_path):
-    #             os.makedirs(folder_path)
-
-    #         # Save predictions
-    #         mse, mae, ssim, psnr = metric(preds, trues, self.test_loader.dataset.mean, self.test_loader.dataset.std, True)
-    #         print_log('mse:{:.4f}, mae:{:.4f}, ssim:{:.4f}, psnr:{:.4f}'.format(mse, mae, ssim, psnr))
-
-    #         # Add visualization
-    #         vis_path = osp.join(folder_path, 'visualizations')
-    #         if not os.path.exists(vis_path):
-    #             os.makedirs(vis_path)
-
-    #         # Visualize multiple sequences
-    #         for i in range(len(inputs)):  # Visualize first 5 sequences
-    #             self.visualize_predictions(
-    #                 batch_x,
-    #                 batch_y,
-    #                pred_y,
-    #                 save_path=vis_path,
-    #                 batch_idx=i
-    #             )
-
-    #         return mse
 
     def vali(self, vali_loader):
         if vali_loader is None:

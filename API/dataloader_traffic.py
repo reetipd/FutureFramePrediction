@@ -158,7 +158,7 @@ class TrafficVideoDataset(Dataset):
         return input_sequence, target_sequence
 
 def load_data(batch_size, val_batch_size, data_root, num_workers):
-    video_path = os.path.join(data_root, 'traffic/video_3.mp4')
+    video_path = os.path.join(data_root, 'traffic/video.mp4')
     yolo_model_path = os.path.join(data_root, 'traffic/best_1.pt')
     
     # Process video with YOLO-based detection
