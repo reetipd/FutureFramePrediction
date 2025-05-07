@@ -1,150 +1,3 @@
-# import cv2
-# from ultralytics import YOLO
-# import numpy as np
-# import torch
-# from torchvision import transforms
-# from torch.utils.data import Dataset, DataLoader
-
-# # Initialize YOLOv5 model (replace with your specific model and path)
-# model = YOLO("./data/traffic/best_1.pt")
-# model.verbose = False
-
-# def extract_frames(video_path, seq_length=10, resize_width=64, resize_height=64):
-#     # Open the video file
-#     video = cv2.VideoCapture(video_path)
-#     frames = []
-#     frame_count = 0
-
-#     while video.isOpened():
-#         ret, frame = video.read()
-#         if not ret:
-#             break
-
-#         # Convert the frame to grayscale
-#         gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        
-#         # Resize the frame to the desired dimensions and normalize pixel values
-#         resized_frame = cv2.resize(gray_frame, (resize_width, resize_height)) / 255.0
-        
-#         # Append the resized frame
-#         frames.append(resized_frame)
-#         frame_count += 1
-#         # print(f"Frame {frame_count}: Grayscale and resized - Shape: {resized_frame.shape}")
-
-#     video.release()
-#     # print(f"Total frames extracted: {frame_count}")
-#     return frames
-
-# # Create sequences of frames (T=10) for training the model
-# def preprocess_frames(frames, seq_length=10, resize_shape=(64, 64)):
-#     processed_frames = []
-#     sequence_count = 0  # To keep track of the number of sequences
-
-#     # Create a sequence of frames (T = seq_length)
-#     for i in range(len(frames) - seq_length):
-#         frame_sequence = []
-
-#         for j in range(seq_length):
-#             frame = frames[i + j]
-#             frame_tensor = torch.tensor(frame).float()  # Convert to tensor
-
-#             # Log the individual frame's tensor conversion
-#             # print(f"Processing Sequence {sequence_count + 1}: Frame {i + j} -> Tensor Shape: {frame_tensor.shape}")
-
-#             # Stack frames to create a sequence
-#             frame_sequence.append(frame_tensor)
-
-#         # Stack the sequence of frames to make it a tensor
-#         processed_frames.append(torch.stack(frame_sequence))
-#         sequence_count += 1
-
-#     # print(f"Total sequences processed: {sequence_count}")
-#     return processed_frames
-
-
-# import torch
-# import numpy as np
-# from torch.utils.data import Dataset, DataLoader
-# from torchvision import transforms
-# import cv2
-
-
-# class TrafficVideoDataset(Dataset):
-#     def __init__(self, frames, seq_length=10, n_frames_input=10, n_frames_output=10, resize_shape=(64, 64)):
-#         self.frames = frames
-#         self.seq_length = seq_length
-#         self.resize_shape = resize_shape
-#         self.n_frames_input = n_frames_input if n_frames_input is not None else 10  # default value
-#         self.n_frames_output = n_frames_output if n_frames_output is not None else 5  # default value
-#         self.transform = transforms.Compose([
-#             transforms.Resize(resize_shape),  # Resize directly on tensor (no need for PIL conversion)
-#             transforms.Grayscale(num_output_channels=1),  # Convert to grayscale, no need for PIL
-#             transforms.ToTensor(),  # Converts to tensor (if not already a tensor)
-#         ])
-
-
-#     def __len__(self):
-#         return len(self.frames) - self.seq_length  # Return number of valid sequences
-
-#     # def __getitem__(self, index):
-#     #     # Define the sequence length (adjust this as needed)
-#     #     input_seq_length = self.n_frames_input
-#     #     output_seq_length = self.n_frames_output
-#     #     total_length = input_seq_length + output_seq_length
-
-#     #     # Fetch frames from the dataset
-#     #     frames = [self.frames[index + i] for i in range(total_length)]
-
-#     #     # Separate the frames into input and output
-#     #     input_frames = frames[:input_seq_length]
-#     #     print(input_frames.shape)  # Check the number of channels
-#     #     output_frames = frames[input_seq_length:]
-
-#     #     # Apply transformations to each frame individually, not the stack
-#     #     input_frames = [self.transform(frame) for frame in input_frames]
-#     #     print(f"Input frames transformed shape (should be [1, H, W]): {[frame.shape for frame in input_frames]}")
-
-#     #     output_frames = [self.transform(frame) for frame in output_frames]
-#     #     print(f"Output frames transformed shape (should be [1, H, W]): {[frame.shape for frame in output_frames]}")
-
-#     #     # Convert frames to tensors and stack them
-#     #     input_tensor = torch.stack(input_frames).float()  # Stack input frames into a tensor
-#     #     print(f"Input tensor shape after stacking: {input_tensor.shape}")
-
-#     #     output_tensor = torch.stack(output_frames).float() if output_frames else torch.tensor([])
-
-#     #     # Print the output tensor shape to verify it as well
-#     #     if output_tensor.numel() > 0:
-#     #         print(f"Output tensor shape after stacking: {output_tensor.shape}")
-#     #     else:
-#     #         print("Output tensor is empty.")
-
-#     #     # Ensure correct dimensions, e.g., [batch_size, channels=1, height, width]
-#     #     return input_tensor, output_tensor
-
-
-
-# def load_data(batch_size, val_batch_size, data_root, num_workers, seq_length=10, resize_shape=(64, 64)):
-
-#     video_path = f"{data_root}/traffic/video.mp4"
-#     # Step 1: Extract frames and detections from video
-#     frames = extract_frames(video_path)
-
-#     print(f"Done with extracting frames from video", len(frames))
-
-#     # Step 2: Preprocess the frames and detections (called here)
-#     processed_frames = preprocess_frames(frames, seq_length=seq_length, resize_shape=resize_shape)
-
-#     # Step 3: Create the dataset and dataloaders
-#     train_set = TrafficVideoDataset(frames=processed_frames, seq_length=seq_length, resize_shape=resize_shape)
-#     test_set = TrafficVideoDataset(frames=processed_frames, seq_length=seq_length, resize_shape=resize_shape)
-
-#     # Create DataLoader for batching during training and testing
-#     dataloader_train = DataLoader(train_set, batch_size=batch_size, shuffle=True, pin_memory=True, num_workers=num_workers)
-#     dataloader_test = DataLoader(test_set, batch_size=val_batch_size, shuffle=False, pin_memory=True, num_workers=num_workers)
-
-#     return dataloader_train, None, dataloader_test, 0, 1
-
 import cv2
 import numpy as np
 import torch
@@ -152,21 +5,6 @@ from torch.utils.data import Dataset, DataLoader, random_split
 import os
 from ultralytics import YOLO
 
-def enhance_frame(frame):
-    """Apply additional enhancements to improve frame quality"""
-    # Enhance contrast
-    frame = cv2.equalizeHist(frame)
-    
-    # Optional: Apply slight Gaussian blur to reduce noise
-    # frame = cv2.GaussianBlur(frame, (3,3), 0)
-    
-    # Optional: Sharpen
-    kernel = np.array([[-1,-1,-1], 
-                      [-1, 9,-1],
-                      [-1,-1,-1]])
-    frame = cv2.filter2D(frame, -1, kernel)
-    
-    return frame
 
 def process_video(video_path):
     print(f"Loading video from: {video_path}")
@@ -184,9 +22,7 @@ def process_video(video_path):
         clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
         gray_frame = clahe.apply(frame)
         gray_frame = cv2.GaussianBlur(gray_frame, (3,3), 0)
-        # Resize to 64x64 to match in_shape
-        frame = cv2.resize(gray_frame, (512, 512))  # Changed from 128x128 to 64x64
-        # frame = enhance_frame(frame) 
+        frame = cv2.resize(gray_frame, (512, 512))  
         
         # Normalize to [0,1]
         frame = frame / 255.0
@@ -195,61 +31,12 @@ def process_video(video_path):
     
     cap.release()
     
-    frames = np.array(frames, dtype=np.float32)  # Shape: [N, H, W]
-    frames = frames[:, np.newaxis, :, :]  # Shape: [N, C=1, H, W]
+    frames = np.array(frames, dtype=np.float32)  
+    frames = frames[:, np.newaxis, :, :] 
     
     print(f"Processed frames shape: {frames.shape}")
     return frames
 
-# def process_video(video_path, sample_rate=3):  # sample_rate=3 means take every 3rd frame
-#     print(f"Loading video from: {video_path}")
-    
-#     cap = cv2.VideoCapture(video_path)
-#     frames = []
-#     frame_count = 0
-    
-#     original_fps = int(cap.get(cv2.CAP_PROP_FPS))
-#     effective_fps = original_fps // sample_rate
-#     print(f"Original FPS: {original_fps}")
-#     print(f"Sampling every {sample_rate} frames -> Effective FPS: {effective_fps}")
-    
-#     while True:
-#         ret, frame = cap.read()
-#         if not ret:
-#             break
-            
-#         # Only process every Nth frame
-#         if frame_count % sample_rate == 0:
-#             # Convert BGR to grayscale
-#             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-#             clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-#             gray_frame = clahe.apply(frame)
-#             gray_frame = cv2.GaussianBlur(gray_frame, (3,3), 0)
-            
-#             # Resize to match model's expected input size
-#             frame = cv2.resize(gray_frame, (512, 512))
-            
-#             # Normalize to [0,1]
-#             frame = frame / 255.0
-            
-#             frames.append(frame)
-        
-#         frame_count += 1
-    
-#     cap.release()
-    
-#     frames = np.array(frames, dtype=np.float32)  # Shape: [N, H, W]
-#     frames = frames[:, np.newaxis, :, :]  # Shape: [N, C=1, H, W]
-    
-#     print(f"Total original frames: {frame_count}")
-#     print(f"Sampled frames: {len(frames)}")
-#     print(f"Processed frames shape: {frames.shape}")
-#     return frames
-
-
-import cv2
-import numpy as np
-from ultralytics import YOLO
 
 def process_video_with_yolo(video_path, yolo_model_path):
     """
@@ -337,7 +124,6 @@ def process_video_with_yolo(video_path, yolo_model_path):
     cap.release()
 
     frames = np.array(frames, dtype=np.float32)
-    # Directly transpose to [N, C, H, W] format (channels first for PyTorch)
     frames = frames.transpose(0, 3, 1, 2)  # Shape: [N, C=3, H, W]
 
     print(f"Total original frames: {frame_count}")
@@ -363,14 +149,11 @@ class TrafficVideoDataset(Dataset):
         return max(0, len(self.data) - (self.input_frames + self.output_frames))
     
     def __getitem__(self, index):
-        # Get sequences from the dataset
         input_sequence = self.data[index:index + self.input_frames]
         target_sequence = self.data[index + self.input_frames:index + self.input_frames + self.output_frames]
         
-        # Ensure we're not accidentally using the same frames for input and target
         assert not torch.equal(input_sequence[-1], target_sequence[0]), "Input and target sequences overlap"
         
-        # No dimension adjustment needed now - data should already be [T, C, H, W]
         return input_sequence, target_sequence
 
 def load_data(batch_size, val_batch_size, data_root, num_workers):

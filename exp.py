@@ -364,46 +364,4 @@ class Exp:
             return avg_loss
         else:
             print("Warning: No valid losses calculated during validation!")
-            return float('inf')
-
-
-
-    
-    
-    # def test(self, args):
-    #     self.model.eval()
-    #     inputs_lst, trues_lst, preds_lst = [], [], []
-
-    #     for batch_x, batch_y in self.test_loader:
-    #         pred_y = self.model(batch_x.to(self.device))
-    #         list(map(lambda data, lst: lst.append(data.detach().cpu().numpy()), [
-    #             batch_x, batch_y, pred_y], [inputs_lst, trues_lst, preds_lst]))
-
-    #     inputs, trues, preds = map(lambda data: np.concatenate(
-    #         data, axis=0), [inputs_lst, trues_lst, preds_lst])
-
-    #     folder_path = self.path + '/results/{}/sv/'.format(args.ex_name)
-    #     if not os.path.exists(folder_path):
-    #         os.makedirs(folder_path)
-
-    #     # Save predictions
-    #     mse, mae, ssim, psnr = metric(preds, trues, self.test_loader.dataset.mean, self.test_loader.dataset.std, True)
-    #     print_log('mse:{:.4f}, mae:{:.4f}, ssim:{:.4f}, psnr:{:.4f}'.format(mse, mae, ssim, psnr))
-
-    #     # Add visualization
-    #     vis_path = osp.join(folder_path, 'visualizations')
-    #     if not os.path.exists(vis_path):
-    #         os.makedirs(vis_path)
-
-    #     # Visualize multiple sequences
-    #     for i in range(min(5, len(inputs))):  # Visualize first 5 sequences
-    #         self.visualize_predictions(
-    #             torch.from_numpy(inputs),
-    #             torch.from_numpy(trues),
-    #             torch.from_numpy(preds),
-    #             vis_path,
-    #             batch_idx=i,
-    #             frame_idx=-1  # Visualize the last frame of the sequence
-    #         )
-
-    #     return mse
+            return float('inf') 
