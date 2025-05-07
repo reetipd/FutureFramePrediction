@@ -50,7 +50,7 @@ conda activate SimVP
 
 To train the model:
 ```bash
-python main.py --batch_size 16 --max_epoch 50 
+python main.py 
 ```
 
 ## Credits
