@@ -47,7 +47,8 @@ class Exp:
 
     def _acquire_device(self):
         if self.args.use_gpu:
-            self.args.gpu = 0  # Ensure GPU 0 is selected
+            # change this argument to change visibility of GPU to this program
+            self.args.gpu = 1  # Ensure GPU 0 is selected
             os.environ["CUDA_VISIBLE_DEVICES"] = str(self.args.gpu)
             device = torch.device('cuda:0')  
             print("Device is..", device)
