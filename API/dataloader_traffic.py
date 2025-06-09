@@ -17,12 +17,12 @@ def process_video(
     showing every vehicle (crisp, full-color) overlaid on the true background.
     """
     model = YOLO(yolo_model_path)
-    cap   = cv2.VideoCapture(video_path)
+    cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():
         raise ValueError(f"Cannot open video: {video_path}")
 
-    mask_dir  = os.path.join(output_dir, "masks")
-    img_dir   = os.path.join(output_dir, "composites")
+    mask_dir = os.path.join(output_dir, "masks")
+    img_dir = os.path.join(output_dir, "composites")
     inter_dir = os.path.join(output_dir, "inter_masks")
     os.makedirs(mask_dir,  exist_ok=True)
     os.makedirs(img_dir,   exist_ok=True)
@@ -149,16 +149,22 @@ class TrafficVideoDataset(Dataset):
         return max(0, len(self.data) - (self.input_frames + self.output_frames))
     
     def __getitem__(self, index):
+        print("The index is: ", index)
         # Get sequences from the dataset
         input_sequence = self.data[index:index + self.input_frames]
-        target_sequence = self.data[index + self.input_frames:index + self.input_frames + self.output_frames]
-        
+
+        # changes made to predict only 2 frames with overlapping
+        target_sequence = self.data[index + self.input_frames - (self.input_frames - self.output_frames):index + self.input_frames + self.output_frames]
+
+        #TODO asserting no overlapping but we want overlapping
         assert not torch.equal(input_sequence[-1], target_sequence[0]), "Input and target sequences overlap"
         
         return input_sequence, target_sequence
 
 def load_data(batch_size, val_batch_size, data_root, num_workers):
-    video_path = os.path.join(data_root, 'traffic/Bellevue_150th_SE38th__2017-09-11_11-08-34.mp4')
+    video_path = os.path.join(data_root, 'traffic/video.mp4')
+
+    # TODO either retrain the YOLO model for the blurr frames or make frames more readable
     yolo_model_path = os.path.join(data_root, 'traffic/best_1.pt')
     
     # Process video with YOLO-based detection
@@ -178,9 +184,9 @@ def load_data(batch_size, val_batch_size, data_root, num_workers):
     print(f"DEBUG: Split sizes - Train: {len(train_frames)}, Val: {len(val_frames)}, Test: {len(test_frames)}")
     
     # Create datasets
-    train_dataset = TrafficVideoDataset(train_frames, input_frames=10, output_frames=10)
-    val_dataset = TrafficVideoDataset(val_frames, input_frames=10, output_frames=10)
-    test_dataset = TrafficVideoDataset(test_frames, input_frames=10, output_frames=10)
+    train_dataset = TrafficVideoDataset(train_frames, input_frames=10, output_frames=2)
+    val_dataset = TrafficVideoDataset(val_frames, input_frames=10, output_frames=2)
+    test_dataset = TrafficVideoDataset(test_frames, input_frames=10, output_frames=2)
     
     print(f"DEBUG: Dataset lengths - Train: {len(train_dataset)}, Val: {len(val_dataset)}, Test: {len(test_dataset)}")
     

@@ -11,4 +11,6 @@ dependencies:
   - pip:
     - tqdm
     - scikit-image
+    - opencv-python
+    - matplotlib
 prefix: /opt/anaconda3/envs/simvp

@@ -10,14 +10,14 @@ def create_parser():
     parser.add_argument('--device', default='mps', type=str, help='Name of device to use for tensor computations (cuda/cpu/mps)')
     parser.add_argument('--res_dir', default='./results', type=str)
     parser.add_argument('--ex_name', default='Debug', type=str)
-    parser.add_argument('--use_gpu', default=True, type=bool)
+    parser.add_argument('--use_gpu', default=False, type=bool)
     parser.add_argument('--gpu', default=0, type=int)
     parser.add_argument('--seed', default=1, type=int)
 
     # dataset parameters
     parser.add_argument('--batch_size', default=1, type=int, help='Batch size')
     parser.add_argument('--val_batch_size', default=1, type=int, help='Batch size')
-    parser.add_argument('--data_root', default='./data/')
+    parser.add_argument('--data_root', default='data/')
     parser.add_argument('--dataname', default='traffic', choices=['traffic', 'traffic_dynamic'])
     parser.add_argument('--num_workers', default=8, type=int)
 

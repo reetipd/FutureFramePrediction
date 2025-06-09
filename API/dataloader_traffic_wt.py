@@ -196,5 +196,5 @@ def load_data(batch_size, val_batch_size, data_root, num_workers):
 
 if __name__ == "__main__":
     train_loader, val_loader, test_loader, mean, std = load_data(
-        batch_size=4, val_batch_size=4, data_root='./data', num_workers=0
+        batch_size=4, val_batch_size=4, data_root='data', num_workers=0
     )
